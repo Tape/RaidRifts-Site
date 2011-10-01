@@ -56,7 +56,7 @@ if (defined('ENVIRONMENT'))
  * as this file.
  *
  */
-	$system_path = 'D:\xampp\htdocs\rift\system';
+	$system_path = '../system';
 
 /*
  *---------------------------------------------------------------
@@ -72,7 +72,7 @@ if (defined('ENVIRONMENT'))
  * NO TRAILING SLASH!
  *
  */
-	$application_folder = 'D:\xampp\htdocs\rift\application';
+	$application_folder = '../application';
 
 /*
  * --------------------------------------------------------------------
