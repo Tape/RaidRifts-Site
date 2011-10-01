@@ -1,28 +1,51 @@
+function toggle_markings(e, type, id)
+{
+	if(id.length) {
+		for(i = 0; i < id.length; i++) window.plots[type].t[id[i]] = !window.plots[type].t[id[i]];
+	} else {
+		window.plots[type].t[id] = !window.plots[type].t[id];
+	}
+	reGraph(type);
+}
+
 function load_guilds(id)
 {
+	var box = $('#apply_wrapper');
+	$('#apply_controls').hide();
+	box.find('select').selectBox('destroy');
+	box.find('div').empty();
+	box.find('span').text('Loading guilds...');
+	
 	$.ajax({
-		url: '<?=base_url()?>members/ajax/guilds/',
+		url: path+'members/ajax/guilds/',
 		type: 'POST',
 		data: {id: id},
 		dataType: 'json',
 		success: function(response) {
-			console.log(response);
 			//Find the box and empty text.
-			var box = $('#apply_box');
 			box.find('span').empty();
 			
 			//If our response does not contain guilds.
-			if(response.guilds.length == 0) {
+			if(response.error) {
 				box.find('span').text(response.error);
 				return;
 			}
 			
 			//If our response does contain guilds then make a select box.
 			var sel = $(document.createElement('select')).attr({
-				name: 'guild'
+				name: 'gid'
 			}).change(function() {
-				$('#apply_link').attr('rel', $(this).val());
-			});
+				if($(this).val() > 0)
+					$('#apply_controls').show();
+			}).appendTo(box.find('div'));
+			
+			//Loop through each guild.
+			for(i = 0; i < response.guilds.length; i++) {
+				sel.append($(document.createElement('option')).val(response.guilds[i].id).text(response.guilds[i].name));
+			}
+			
+			//Make the select box look pretty now.
+			sel.selectBox();
 		}
 	});
 }
@@ -35,13 +58,14 @@ function reGraph(type)
 		if(g[type][name]) data.push(g[type][name]);
 	});
 	$.each(m, function(i, val) {
-		markings.push({
-			color: '#B00',
+		if(!window.plots || !window.plots[type] || window.plots[type].t[val.i]) markings.push({
+			color: val.c,
 			lineWidth: 1,
-			xaxis: { from: val.t, to: val.t }
+			xaxis: { from: val.t, to: val.t + val.l }
 		});
 	});
-	$.plot($('.graph_canvas[rel='+type+']'), data, {
+	if(!window.plots) window.plots = {};
+	var plot = $.plot($('.graph_canvas[rel='+type+']'), data, {
 		legend: {
 			backgroundColor: 'transparent',
 			container: $('.graph_legend[rel='+type+']'),
@@ -57,6 +81,20 @@ function reGraph(type)
 			hoverable: true
 		}
 	});
+	
+	//Store the plot and get the distance of data 5 pixels away.
+	plot.distance = plot.getAxes().xaxis.datamax / plot.width() * 5;
+	if(window.plots[type]) {
+		plot.t = window.plots[type].t;
+		window.plots[type] = plot;
+	} else {
+		plot.t = {
+			0: true,
+			1: true,
+			2: true
+		};
+		window.plots[type] = plot;
+	}
 }
 
 function notify(text, error)
@@ -90,7 +128,7 @@ function deleteLog()
 		var e = $(this), data = {
 			id: e.attr('rel')
 		};
-		$.post('<?=base_url()?>members/ajax/deletelog/', data, function(data) {
+		$.post(path+'members/ajax/deletelog/', data, function(data) {
 			var n;
 			if(data == 'SUCCESS') {
 				n = notify("Your log has been removed successfully.");
@@ -104,11 +142,45 @@ function deleteLog()
 	}
 }
 
+function modal(title, contents)
+{
+	return {
+		content: {
+			title: {
+				text: title,
+				button: 'Close'
+			},
+			text: contents
+		},
+		position: {
+			target: $(document.body),
+			corner: 'center'
+		},
+		show: {
+			when: 'click',
+			solo: true
+		},
+		hide: false,
+		style: {
+			name: 'dark'
+		},
+		api: {
+			beforeShow:function() {
+				$('#qtip-blanket').fadeIn(this.options.show.effect.length);
+			},
+			beforeHide:function() {
+				$('#qtip-blanket').fadeOut(this.options.show.effect.length);
+			}
+		}
+	};
+}
+
 $(function() {
 	var tab_count = 3,
 	names=[];
 	$('.alert,.notification').live('blur', function() {
-		if($(this).attr('rel') != 0) $(this).rrSlideOut();
+		rel = parseInt($(this).attr('rel'));
+		if(rel != 0) $(this).rrSlideOut(rel*1000);
 	}).trigger('blur');
 	$('select').selectBox();
 	$('.sorter').tablesorter();
@@ -151,7 +223,6 @@ $(function() {
 				for(i = 0; i < actor.values.length; i++) {
 					var percent = actor.values[i][1]/actor.total*100,
 						$row = $('<tr />'), $bar = $('<div />');
-
 					$bar.progressbar({value:Math.round(actor.values[i][1]/actor.values[0][1]*100)});
 					$row.append('<td>'+actor.values[i][0]+'</td><td align="right" width="50">'+actor.values[i][1]+'</td>');
 					$row.append($bar);
@@ -186,12 +257,18 @@ $(function() {
 					name: 'dark'
 				}
 			});
-		})
+		});
 	});
 	
-	$('input').keydown(function(e) {
-		if(e.keyCode == 13) {
-			$(this).parents('form').submit();
+	$('input,textarea').keydown(function(e) {
+		var elem = $(this), form = elem.parents('form');
+		if(e.keyCode == 9) {
+			var inputs = form.find('input:visible,textarea:visible'), num = inputs.index(elem)+1;
+			inputs.eq(num >= inputs.length ? 0 : num).focus();
+			return false;
+		}
+		if(e.keyCode == 13 && !elem.is('textarea')) {
+			form.submit();
 			return false;
 		}
 	});
@@ -202,6 +279,11 @@ $(function() {
 			if(confirm(rel)) run = true;
 		} else run = true;
 		if(run) $(this).parents('form').submit();
+		return false;
+	});
+	
+	$('.btn.reset').click(function() {
+		$(this).parents('form')[0].reset();
 		return false;
 	});
 
@@ -262,13 +344,44 @@ $(function() {
 		var type = $(this).attr('rel');
 		reGraph(type);
 		$(this).bind('plothover', function(event, pos, item) {
-			$('#tooltip_graph').remove();
-			if(item) {
-				$(document.createElement('div')).attr('id', 'tooltip_graph').css({
-					top: item.pageY + 5,
-					left: item.pageX + 5
-				}).appendTo('body').html(item.series.label + ': ' + item.datapoint[0] + 's, ' + item.datapoint[1] + (type == 'healing' ? ' HPS' : ' DPS'));
+			//Remove the tooltip.
+			var e = $('#tooltip_graph'), markings = [], plot = window.plots[$(this).attr('rel')];
+			//Search for markings nearby.
+			var distance = plot.distance, offset = plot.offset(), height = plot.height(), width = plot.width();
+			var inbounds = pos.pageY >= offset.top && pos.pageY <= offset.top + height && pos.pageX >= offset.left && pos.pageX <= offset.left + width;
+			for(i = 0; i < m.length; i++) {
+				if(plot.t[m[i].i] && inbounds) switch(true) {
+					case Math.abs(m[i].t - pos.x) <= distance:
+					case Math.abs(m[i].t + m[i].l - pos.x) <= distance:
+					case m[i].t <= pos.x && m[i].t + m[i].l >= pos.x:
+					markings.push(m[i]);
+					break;
+				}
 			}
+			
+			//Check if we have a valid tooltip.
+			if(item || markings.length > 0) {
+				//Make the tooltip.
+				if(e.length == 0) e = $(document.createElement('div')).attr('id', 'tooltip_graph').appendTo('body');
+				e.css({
+					top: pos.pageY + 5,
+					left: pos.pageX + 5
+				});
+				//Build the text.
+				var text = [];
+				if(markings.length > 0) for(i = 0; i < markings.length; i++) {
+					var marktype = markings[i].i, str;
+					switch(marktype) {
+						case 0: str = ' is killed by ';break;
+						case 1: str = ' is revived by ';break;
+						case 2: str = ' casts ';break;
+					}
+					text.push(markings[i].t + 's, ' + markings[i].n + str + markings[i].o);
+				}
+				if(item) text.push(item.series.label + ': ' + item.datapoint[0] + 's, ' + item.datapoint[1] + (type == 'healing' ? ' HPS' : ' DPS'));
+				//Join the text.
+				e.html(text.join('<br />'));
+			} else e.remove();
 		});
 	});
 
@@ -279,114 +392,42 @@ $(function() {
 	});
 	
 	var login_form = $('#login_box').detach().show();
-	$('#login_link').qtip({
-		content: {
-			title: {
-				text:'Please Log In',
-				button:'Close'
-			},
-			text: login_form
-		},
-		position: {
-			target: $(document.body),
-			corner: 'center'
-		},
-		show: {
-			when: 'click',
-			solo: true
-		},
-		hide: false,
-		style: {
-			name: 'dark'
-		},
-		api: {
-			beforeShow:function() {
-				$('#qtip-blanket').fadeIn(this.options.show.effect.length);
-			},
-			beforeHide:function() {
-				$('#qtip-blanket').fadeOut(this.options.show.effect.length);
-			}
-		}
-	}),
-	
-	apply_form = $('#apply_box').detach().show();
-	$('#apply_link').qtip({
-		content: {
-			title: {
-				text:'Apply to this guild',
-				button:'Close'
-			},
-			text: apply_form
-		},
-		position: {
-			target: $(document.body),
-			corner: 'center'
-		},
-		show: {
-			when: 'click',
-			solo: true
-		},
-		hide: false,
-		style: {
-			name: 'dark'
-		},
-		api: {
-			beforeShow:function() {
-				$('#qtip-blanket').fadeIn(this.options.show.effect.length);
-			},
-			beforeHide:function() {
-				$('#qtip-blanket').fadeOut(this.options.show.effect.length);
-			}
-		}
+	//Change the layout of the login box should they click the "forgot password" link.
+	login_form.find('#forgot_password').click(function() {
+		$(this).parents('form').children('p').toggle();
+		return false;
 	});
+	$('#login_link').qtip(modal('Please Log In', login_form));
+	
+	var apply_form = $('#apply_box').detach().show();
+	$('#apply_link').qtip(modal('Apply to this guild', apply_form));
 	
 	register_form = $('#register_box').detach().show();
-	$('#register_link').qtip({
-		content: {
-			title: {
-				text:'Register with RaidRifts',
-				button:'Close'
-			},
-			text: register_form
-		},
-		position: {
-			target: $(document.body),
-			corner: 'center'
-		},
-		show: {
-			when: 'click',
-			solo: true
-		},
-		hide: false,
-		style: {
-			name: 'dark'
-		},
-		api: {
-			beforeShow:function() {
-				$('#qtip-blanket').fadeIn(this.options.show.effect.length);
-			},
-			beforeHide:function() {
-				$('#qtip-blanket').fadeOut(this.options.show.effect.length);
-			}
-		}
-	});
+	$('#register_link').qtip(modal('Register with RaidRifts', register_form));
 
 	var login_check = true;
 	login_form.find('form').submit(function() {
 		var o = $(this);
 		if(login_check) {
 			login_check = false;
+			o.prepend('<p class="notification">Please wait...</p>');
 			$.post(o.attr('action'), o.serialize(), function(data) {
-				$('#login_box').find('.msg').remove();
-				var e;
-				if(data == 'SUCCESS') {
+				o.find('.notification').remove();
+				var e = $(document.createElement('p')).hide();
+				if(data == 'SUCCESS' && o.find('input[name=email]').val() == '') {
+					e.attr('class', 'notification').text('Logged in! Redirecting...');
 					location.reload(true);
+				} else if(data == 'SUCCESS') {
+					login_check = true;
+					e.attr('class', 'notification').text('Check your email for new password');
+					o[0].reset();
+					o.find('p').toggle();
 				} else {
 					login_check = true;
-					var e = $('<p class="alert">The information you have entered is invalid.</p>').hide();
-					$('#login_box').prepend(e);
-					e.rrSlideIn();
+					e.attr('class', 'alert').text(data);
 				}
+				$('#login_box').prepend(e);
+				e.rrSlideIn();
 			});
 		}
 		return false;
@@ -423,7 +464,7 @@ $(function() {
 			register_check = false;
 			$.post(o.attr('action'), o.serialize(), function(data) {
 				if(data == 'SUCCESS') {
-					window.location = '<?=base_url()?>register/complete/';
+					window.location = path+'register/complete/';
 				} else {
 					register_check = true;
 					box.find('.alert,.notification').remove();
@@ -455,7 +496,7 @@ $(function() {
 	$('.applications .check,.applications .cross').click(function() {
 		var e = $(this), type = e.hasClass('cross') ? 'decline' : 'accept', tr = e.parents('tr');
 		if(confirm('Are you sure you want to '+type+ ' this application?')) {
-			$.post('<?=base_url()?>members/ajax/application/', {
+			$.post(path+'members/ajax/application/', {
 				aid: tr.attr('ajax'),
 				action: type
 			}, function(data) {
@@ -494,7 +535,7 @@ $(function() {
 	$('.member_list .cross').click(function() {
 		var e = $(this), tr = e.parents('tr');
 		if(confirm('Are you sure you want to remove this member from the guild?')) {
-			$.post('<?=base_url()?>members/ajax/kick/', {
+			$.post(path+'members/ajax/kick/', {
 				uid: tr.attr('rel')
 			}, function(data) {
 				var n;
@@ -530,7 +571,7 @@ $(function() {
 			v.n = ui.tab.innerHTML;
 			$.ajax({
 				type:"GET",
-				url:'<?=base_url()?>tab/',
+				url:path+'report/tab/',
 				data:v,
 				success:function(msg) {
 					$(ui.panel).html(msg);
