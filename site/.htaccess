@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteBase /rift/site
+RewriteCond $1 !^(index\.php|images|css|downloads|js|robots\.txt|favicon\.ico)
+RewriteRule ^(.*)$ index.php/$1 [L]
