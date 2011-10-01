@@ -6,8 +6,6 @@
 <meta name="keywords" content="RaidRifts, analysis, trion, raid, guild, damage, healing, rift, combat log, pve, dungeons" />
 <link rel="shortcut icon" href="<?=base_url()?>favicon.ico" />
 <link rel="stylesheet" type="text/css" href="<?=base_url()?>css/style.css?3" />
-<script type="text/javascript" src="<?=base_url()?>js/raidrifts.min.js?2"></script>
-<script type="text/javascript" src="<?=base_url()?>js/excanvas.min.js"></script>
 <script type="text/javascript">
 var path='<?=base_url()?>';
 </script>
@@ -17,6 +15,7 @@ var path='<?=base_url()?>';
 <script type="text/javascript" src="<?=base_url()?>js/raidrifts.min.js"></script>
 <script type="text/javascript">var _gaq =_gaq||[];_gaq.push(['_setAccount','UA-24111550-1']);_gaq.push(['_trackPageview']);(function(){var ga=document.createElement('script');ga.type='text/javascript';ga.async=true;ga.src=('https:'==document.location.protocol?'https://ssl':'http://www')+'.google-analytics.com/ga.js';var s=document.getElementsByTagName('script')[0];s.parentNode.insertBefore(ga,s);})();</script>
 <?php endif; ?>
+<script type="text/javascript" src="<?=base_url()?>js/excanvas.min.js"></script>
 </head>
 <body>
 <div id="header">
