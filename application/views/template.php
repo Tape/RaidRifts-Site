@@ -5,17 +5,16 @@
 <meta name="description" content="RaidRifts is a combat log analysis tool for Rift, which helps players analyze the performance in damage, healing, and other aspects of raid combat." />
 <meta name="keywords" content="RaidRifts, analysis, trion, raid, guild, damage, healing, rift, combat log, pve, dungeons" />
 <link rel="shortcut icon" href="<?=base_url()?>favicon.ico" />
-<link rel="stylesheet" type="text/css" href="<?=base_url()?>css/style.css?3" />
+<link rel="stylesheet" type="text/css" href="<?=base_url()?>css/style.css?4" />
 <script type="text/javascript">
 var path='<?=base_url()?>';
 </script>
 <?php if(IS_LOCAL_TEST): ?>
 <script type="text/javascript" src="<?=base_url()?>js/raidrifts.js"></script>
 <?php else: ?>
-<script type="text/javascript" src="<?=base_url()?>js/raidrifts.min.js"></script>
+<script type="text/javascript" src="<?=base_url()?>js/raidrifts.min.js?3"></script>
 <script type="text/javascript">var _gaq =_gaq||[];_gaq.push(['_setAccount','UA-24111550-1']);_gaq.push(['_trackPageview']);(function(){var ga=document.createElement('script');ga.type='text/javascript';ga.async=true;ga.src=('https:'==document.location.protocol?'https://ssl':'http://www')+'.google-analytics.com/ga.js';var s=document.getElementsByTagName('script')[0];s.parentNode.insertBefore(ga,s);})();</script>
 <?php endif; ?>
-<script type="text/javascript" src="<?=base_url()?>js/excanvas.min.js"></script>
 </head>
 <body>
 <div id="header">
@@ -41,11 +40,10 @@ var path='<?=base_url()?>';
 <?php endif; ?>
 <ul class="navigation">
 	<li><a href="<?=base_url()?>">Home</a></li>
+	<li><a href="<?=base_url()?>rankings/">Rankings</a></li>
 	<li><a href="<?=base_url()?>browse/">Browse</a></li>
-	<li><a href="<?=base_url()?>page/about/">About</a></li>
-<? if($this->user->admin): ?>
 	<li><a href="<?=base_url()?>forums/">Forums</a></li>
-<? endif; ?>
+	<li><a href="<?=base_url()?>page/help/">Help</a></li>
 	<li><a href="<?=base_url()?>page/contact/">Contact</a></li>
 </ul>
 </div>

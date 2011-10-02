@@ -16,8 +16,7 @@ class Browse extends CI_Controller
 		$data = array(
 			'body' => 'browse/index',
 			'na_servers' => $this->browse_model->get_shards('na'),
-			'eu_servers' => $this->browse_model->get_shards('eu'),
-			'raids' => $this->browse_model->get_raids()
+			'eu_servers' => $this->browse_model->get_shards('eu')
 		);
 		$this->load->view('template', $data);
 	}
@@ -28,22 +27,7 @@ class Browse extends CI_Controller
 		
 		$data = array(
 			'body' => 'browse/shard',
-			'guilds' => $this->browse_model->get_guilds($id)
-		);
-		$this->load->view('template', $data);
-	}
-	
-	public function boss($id = null, $offset = 1)
-	{
-		if(is_null($id)) show_404('no_shard_error');
-		
-		if(($data = $this->browse_model->get_attempts($id, $offset)) === false) show_404('invalid_boss_id');
-		$this->load->helper('data');
-		$data = array(
-			'body' => 'browse/boss',
-			'offset' => $offset,
-			'boss_name' => $data->EN,
-			'encounters' => $data->encounters
+			'shard' => $this->browse_model->get_shard($id)
 		);
 		$this->load->view('template', $data);
 	}
@@ -59,18 +43,17 @@ class Browse extends CI_Controller
 		//Prepare variables for processing.
 		$year = is_null($year) ? date('Y') : $year;
 		$month = is_null($month) ? date('n') : $month;
-		$logs = $this->browse_model->get_logs($id, $year, $month);
+		$guild = $this->browse_model->get_guild($id, $year, $month);
 		
 		//Prep the data.
 		$data = array(
 			'body' => 'browse/calendar',
-			'body_vars' => $this->browse_model->get_guild($id),
-			'guild_id' => $id,
-			'calendar' => $this->calendar->generate($year, $month, $logs)
+			'guild' => $guild
 		);
-		if($data['body_vars'] === false) {
-			show_404('guild_does_not_exist');
+		if($data === false) {
+			show_404('guild_not_found');
 		}
+		$data['calendar'] = $this->calendar->generate($year, $month, $guild->calendar);
 		$this->load->view('template', $data);
 	}
 }
