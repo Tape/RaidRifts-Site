@@ -27,35 +27,20 @@ class Forum_model extends CI_Model
 		//Escape all of the array keys.
 		$in = implode(', ', array_keys($data));
 		//Now we want to fetch boards for each category.
-		$this->db->where('`id_category` IN('.$in.')')->order_by('sort', 'asc');
-		$this->db->ar_orderby[] = ' FIELD(id_category, '.$in.')';
+		$this->db->select('boards.id, boards.id_category, boards.date_lastpost, boards.name, boards.description');
+		$this->db->select('users.admin, boards.count_topics, boards.count_posts, users.username');
+		$this->db->where('`boards`.`id_category` IN('.$in.')')->order_by('sort', 'asc');
+		$this->db->ar_orderby[] = ' FIELD(`boards`.`id_category`, '.$in.')';
+		$this->db->join('users', 'users.id = boards.id_lastpost_user', 'left');
 		$rs = $this->db->get('boards');
 		//Check if we have results.
 		if($rs->num_rows() < 1) return false;
 		
 		//Loop through each board and put it in the correct category.
-		$names = array();
 		foreach($rs->result() as $board) if(isset($data[$board->id_category])) {
-			$index = count($data[$board->id_category]->boards);
-			$data[$board->id_category]->boards[$index] = $board;
-			$data[$board->id_category]->boards[$index]->lastpost_username = 'Unknown';
-			if(!is_null($board->id_lastpost_user)) {
-				$names[$board->id_lastpost_user][] =& $data[$board->id_category]->boards[$index];
-			}
+			$data[$board->id_category]->boards[] = $board;
 		}
 		$rs->free_result();
-		
-		//Lastly, we want to find out who the last poster was.
-		if(count($names) > 0) {
-			$in = implode(', ', array_unique(array_keys($names)));
-			$rs = $this->db->select('id, username')->where('`id` IN ('.$in.')')->get('users');
-			
-			//If we have names to place...
-			if($rs->num_rows() > 0) {
-				foreach($rs->result() as $user) foreach($names[$user->id] as &$board) $board->lastpost_username = $user->username;
-			}
-			$rs->free_result();
-		}
 		
 		//Final cleanup: Unset empty categories.
 		foreach($data as $id => &$category) if(empty($category->boards)) unset($data[$id]);
@@ -75,12 +60,29 @@ class Forum_model extends CI_Model
 		return $data;
 	}
 	
+	public function get_topic($id)
+	{
+		//Check if the board exists.
+		$rs = $this->db->where('id', $id)->get('topics');
+		if($rs->num_rows() < 1) show_404('invalid_forum_topic');
+		
+		//Fetch the necessary data and free the result.
+		$data = $rs->row();
+		$rs->free_result();
+		
+		//If we have gotten here then we know this is valid.
+		$tmp = $this->db->get_where('boards', array('id' => $data->id_board))->row();
+		$data->board_id = $tmp->id;
+		$data->board_name = $tmp->name;
+		return $data;
+	}
+	
 	public function get_topics($id)
 	{
 		//Check if the board exists.
 		$this->db->order_by('date_inserted', 'desc')->where('id_board', $id);
 		$this->db->select('topics.id, topics.id_lastpost, topics.title, topics.post_count, topics.views, topics.date_inserted, topics.date_lastpost');
-		$this->db->select('users.username AS author_name');
+		$this->db->select('users.username, users.admin');
 		$this->db->join('users', 'users.id = topics.id_user', 'inner');
 		$rs = $this->db->get('topics');
 		if($rs->num_rows() < 1) return false;
@@ -96,7 +98,9 @@ class Forum_model extends CI_Model
 	{
 		$data = array();
 		//Check if the topic exists.
-		$topic_rs = $this->db->where('topics.id', $id)->join('boards', 'boards.id = topics.id_board', 'inner')->get('topics');
+		$this->db->where('topics.id', $id)->join('boards', 'boards.id = topics.id_board', 'inner');
+		$this->db->join('users', 'users.id = topics.id_user', 'inner');
+		$topic_rs = $this->db->get('topics');
 		if($topic_rs->num_rows() < 1) return false;
 		
 		//Now loop through the posts.
@@ -143,6 +147,7 @@ class Forum_model extends CI_Model
 			'body' => $data['body'],
 			'date_inserted' => $timestamp
 		));
+		$topic_id = $this->db->insert_id();
 		
 		//We want to update the board with the most recent post too.
 		$this->db->set('count_topics', 'count_topics + 1', false)->set('id_lastpost', 'NULL', false)->update('boards', array(
@@ -151,7 +156,12 @@ class Forum_model extends CI_Model
 			'date_lastpost' => $timestamp
 		), array('id' => $board->id));
 		
-		return true;
+		//Lastly increment the user's post count.
+		$this->db->set('posts', 'posts + 1', false)->update('users', array(
+			'id_lasttopic' => $topic_id
+		), array('id' => $this->user->id));
+		
+		return $topic_id;
 	}
 	
 	public function get_error()

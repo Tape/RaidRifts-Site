@@ -121,6 +121,14 @@ class Member_model extends CI_Model
 		if(strlen($data['name']) < 4) {
 			$errors[] = 'The guild name you have provided is too short.';
 		}
+		//We also need to verify the guild name isn't claimed.
+		$rs = $this->db->get_where('guilds', array(
+			'name' => $data['name'],
+			'shard' => $data['shard']
+		));
+		if($rs->num_rows() > 0 && $rs->row()->id != $this->user->guild) {
+			$errors[] = 'This guild name is already claimed on this shard.';
+		}
 		
 		//No errors, let's update.
 		if(empty($errors)) {

@@ -18,17 +18,18 @@
 	<th>Title</th>
     <th>Posts</th>
     <th>Views</th>
-    <th>Author</th>
     <th>Last Post</th>
 </tr>
 </thead>
 <tbody>
 <? foreach($topics as &$topic): ?>
 <tr>
-	<td class="left"><a href="<?=base_url()?>forums/topic/<?=$topic->id?>/"><?=$topic->title?></a></td>
+	<td class="left">
+		<a href="<?=base_url()?>forums/topic/<?=$topic->id?>/"><?=$topic->title?></a><br />
+		Started by <?=$topic->admin ? '<span class="legendary">' : '<span class="uncommon">'?><?=$topic->username?></span>, <?=date('n/j/Y h:ia', strtotime($topic->date_inserted))?>
+	</td>
 	<td><?=$topic->post_count?></td>
 	<td><?=$topic->views?></td>
-    <td><?=$topic->author_name?></td>
 	<td><?=is_null($topic->id_lastpost) ? 'No replies' : ''?></td>
 </tr>
 <? endforeach; ?>

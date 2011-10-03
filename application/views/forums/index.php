@@ -23,9 +23,13 @@
     <td><?=$board->count_topics?></td>
     <td><?=$board->count_posts?></td>
     <td>
-<? if(!is_null($board->id_lastpost_user)): ?>
+<? if(!is_null($board->username)): ?>
 		<?=date('n/j/Y h:ia', strtotime($board->date_lastpost))?><br />
-		<?=$board->lastpost_username?>
+<? if($board->admin): ?>
+		<span class="legendary"><?=$board->username?></span>
+<? else: ?>
+		<span class="uncommon"><?=$board->username?></span>
+<? endif; ?>
 <? else: ?>
 		No Posts
 <? endif; ?>

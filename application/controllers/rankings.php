@@ -29,8 +29,7 @@ class Rankings extends CI_Controller
 		$data = array(
 			'body' => 'rankings/boss',
 			'offset' => $offset,
-			'boss_name' => $data->EN,
-			'encounters' => $data->encounters
+			'boss' => $data
 		);
 		$this->load->view('template', $data);
 	}

@@ -148,6 +148,7 @@ a,.glow,#header .login a{color:#17BBB0}
 .btn img{float:left;margin-right:5px;vertical-align:middle}
 .btn span{display:block;height:13px;background:url(../images/button_body.png);padding:7px 5px 8px 12px;white-space:nowrap;cursor:pointer}
 .btn:hover, .btn:hover span{background-position-y:-28px;color:#FFF}
+.componentheading .btn{margin:-4px 5px 0 0}
 .calendar{margin:auto;background:#0C0C0C;padding:2px;border-radius:4px;width:100%}
 .calendar a{font-weight:bold}
 .calendar td,.calendar tbody th,.ui-datepicker td{background:#171717;border:1px solid #444;border-color:#222 #000 #000 #222}
@@ -194,8 +195,11 @@ canvas.base div{overflow:visible!important}/*Why is IE so awful?*/
 .forum_block tr td{padding:4px 0;border-top:1px solid #222;text-align:center}
 .forum_block.boards tr td{padding:8px 0}
 .forum_block tr td:first-child{padding-left:10px}
+.forum_block.post td{vertical-align:top}
+.forum_block.post td,.forum_block.post th{padding:4px;text-align:left}
 .forum_block th{background:#111;padding:5px 0;color:#BBB;font-size:110%}
 .forum_block.boards a{font-size:130%}
+.forum_block .user_info{width:115px;border-right:1px solid #222}
 .post_form{width:408px;margin:auto}
 .post_form input,.post_form textarea{width:400px}
 .post_form textarea{height:200px}
@@ -203,3 +207,4 @@ canvas.base div{overflow:visible!important}/*Why is IE so awful?*/
 .epic{color:#A335EE}
 .rare{color:#0070FF}
 .uncommon{color:#1EFF00}
+.board_title{font-size:120%;padding-top:0}

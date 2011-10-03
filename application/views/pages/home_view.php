@@ -1,4 +1,9 @@
-<h1 class="componentheading">Welcome to RaidRifts!</h1>
+<h1 class="componentheading">
+<?php if($this->user->admin): ?>
+	<a class="btn float-right" href="<?=base_url()?>page/edit/"><span>Edit Page</span></a>
+<?php endif; ?>
+	Welcome to RaidRifts!
+</h1>
 
 <div class="content-block">
 <h2 class="content-heading chat">Site Updates 8/17/2011</h2>

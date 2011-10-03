@@ -17,13 +17,15 @@ class Rankings_model extends CI_Model
 	public function get_attempts($id_boss, $offset)
 	{
 		//Need boss data first.
+		$this->db->select('bosses.EN AS name, COUNT(attempts.id) AS attempts, bosses.id')->join('attempts', 'attempts.id_boss = bosses.id', 'inner')->group_by('bosses.id');
 		$rs = $this->db->get_where('bosses', array(
-			'id' => $id_boss
+			'bosses.id' => $id_boss
 		));
 		if($rs->num_rows() < 1) return false;
 		$data = $rs->row();
 		$rs->free_result();
 		$data->encounters = array();
+		$data->offset = $offset;
 		
 		//Need the encounter list now.
 		$this->db->select('guilds.id, guilds.name, logs.hash, attempts.start, attempts.end, attempts.length, shards.name AS shard, shards.id AS shard_id, shards.region');

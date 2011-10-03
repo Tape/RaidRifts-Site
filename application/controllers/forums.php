@@ -16,7 +16,6 @@ class Forums extends CI_Controller
 		$data = array(
 			'content' => $this->load->view('forums/index', $vars, true)
 		);
-		
 		//Output the template.
 		$this->load->view('template', $data);
 	}
@@ -71,14 +70,50 @@ class Forums extends CI_Controller
 		//Load up variables for the view.
 		$vars = array(
 			'board' => $board,
-			'topic' => true,
+			'is_topic' => true,
 			'id_board', $id
 		);
 		//If a post has been submitted we want to send the data to the model.
-		if(($post = $this->input->post()) !== false) if(!$this->forum_model->create_topic($post, $board)) {
+		if(($post = $this->input->post()) !== false) if(($topic_id = $this->forum_model->create_topic($post, $board)) === false) {
 			//If errors were found.
 			$vars['error'] = $this->forum_model->get_error();
 			$vars['post'] = $post;
+		} else {
+			//We created a topic, so redirect to it.
+			redirect('/forums/topic/'.$topic_id.'/');
+		}
+		
+		//Create data to be injected into the template.
+		$data = array();
+		if($this->user->id !== false) {
+			$data['content'] = $this->load->view('forums/post', $vars, true);
+		} else {
+			$data['content'] = $this->load->view('forums/permission', null, true);
+		}
+		
+		$this->load->view('template', $data);
+	}
+	
+	public function post($id = null)
+	{
+		if(is_null($id) || !is_numeric($id) || $this->user->id === false) show_404('invalid_forum_post');
+		
+		//This is a little check for if the topic exists and stuff.
+		$topic = $this->forum_model->get_topic($id);
+		
+		//Load up variables for the view.
+		$vars = array(
+			'topic' => $topic,
+			'is_topic' => false
+		);
+		//If a post has been submitted we want to send the data to the model.
+		if(($post = $this->input->post()) !== false) if(($post_id = $this->forum_model->create_post($post, $topic)) === false) {
+			//If errors were found.
+			$vars['error'] = $this->forum_model->get_error();
+			$vars['post'] = $post;
+		} else {
+			//We created a new post, so redirect to it.
+			redirect('/forums/topic/'.$topic_id.'/#post'.$post_id);
 		}
 		
 		//Create data to be injected into the template.
