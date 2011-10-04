@@ -447,7 +447,7 @@ $(function() {
 		return false;
 	});
 
-	$('.edit').click(function() {
+	$('span.edit').click(function() {
 		$('#save_changes').show();
 		var tds = $(this).parents('tr').children('td'), id = $(this).attr('rel');
 		$(this).remove();

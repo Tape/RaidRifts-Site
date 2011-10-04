@@ -1,6 +1,6 @@
 <h1 class="componentheading">
 <?php if($this->user->admin): ?>
-	<a class="btn float-right" href="<?=base_url()?>page/edit/"><span>Edit Page</span></a>
+	<a class="btn float-right" href="<?=base_url()?>page/edit/<?$page->id?>/"><span>Edit Page</span></a>
 <?php endif; ?>
 	Welcome to RaidRifts!
 </h1>

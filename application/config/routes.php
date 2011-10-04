@@ -39,7 +39,7 @@
 */
 
 $route['default_controller'] = 'page';
-$route['page/(.*+)'] = 'page/view/$1';
+$route['page/((?!edit).*)'] = 'page/view/$1';
 $route['404_override'] = '';
 
 

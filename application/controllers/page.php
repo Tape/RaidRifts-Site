@@ -7,6 +7,7 @@ class Page extends MY_Controller
 	public function __construct()
 	{
 		parent::__construct();
+		$this->load->model('page_model');
 	}
 	
 	private function get_boss_id($name)
@@ -67,16 +68,55 @@ class Page extends MY_Controller
 		*/
 		
 		//Render the page.
+		$this->view('home');
+	}
+	
+	public function edit($id = null)
+	{
+		if(!$this->user->admin || !is_numeric($id)) {
+			show_404("invalid_edit_access");
+		}
+		
+		$data = array();
+		$post = $this->input->post();
+		if($post !== false) {
+			if($this->page_model->update_page($id, $post))
+				$data['notification'] = "Saved changes.";
+			else
+				$data['error'] = "An error occurred while saving.";
+		}
+		
 		$this->load->view('template', array(
-			//'content' => "<pre>".print_r($add, true)
-			'content' => $this->load->view('pages/home_view', null, true)
-		));
+			'content' => $this->load->view('pages/edit', array(
+				'page' => $this->page_model->load_page($id)
+			) + $data, true)));
 	}
 
 	public function view($name)
 	{
+		//Lets check and see if this is an editable page.
+		$page = $this->page_model->load_page($name);
 		//Data stuff.
-		$data = array('body' => 'pages/'.$name.'_view');
+		$data = array();
+		if($page === false) {
+			//Prepare the data.
+			$data['body'] = 'pages/'.$name.'_view';
+			
+			//Verify the page exists.
+			$path = APPPATH."views/pages/{$name}_view.php";
+			if(!file_exists($path)) {
+				show_404($path);
+			}
+		} else {
+			$replace = '';
+			if($this->user->admin) {
+				$replace = $this->load->view('pages/edit_button', array(
+					'id' => $page->id
+				), true);
+			}
+			$content = str_replace('{edit}', $replace, $page->content);
+			$data['content'] = $content;
+		}
 		//Check if form data from one of the pages exists.
 		$post = $this->input->post();
 		if($post !== false) {
@@ -92,18 +132,6 @@ class Page extends MY_Controller
 		}
 		
 		if(!AJAX_REQUEST) {
-			//Verify the page exists.
-			$path = APPPATH."views/pages/{$name}_view.php";
-			if(!file_exists($path)) {
-				show_404($path);
-			}
-	
-			//Prepare data.
-			if($name == 'control-panel') {
-				$data['body_vars'] = $this->page_model->getPersonalLogs();
-				$data['shards'] = $this->page_model->getShards();
-			}
-	
 			//Output the data.
 			$this->load->view('template', $data);
 		}

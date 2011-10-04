@@ -1,0 +1,1 @@
+<a class="btn float-right" href="<?=base_url()?>page/edit/<?=$id?>/"><span>Edit Page</span></a>
