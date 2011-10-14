@@ -207,4 +207,4 @@ canvas.base div{overflow:visible!important}/*Why is IE so awful?*/
 .epic{color:#A335EE}
 .rare{color:#0070FF}
 .uncommon{color:#1EFF00}
-.board_title{font-size:120%;padding-top:0}
+.board_title{font-size:120%;padding-top:0;color:#999}

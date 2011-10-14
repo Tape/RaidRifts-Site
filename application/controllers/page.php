@@ -12,38 +12,41 @@ class Page extends MY_Controller
 	
 	private function get_boss_id($name)
 	{
-		foreach($this->bosses as $boss_id => &$vars) foreach(array('EN', 'FR', 'DE') as $lang) {
-			if($vars->$lang == $name) return $boss_id;
-		}
+		foreach($this->bosses as $boss_id => &$vars)
+			if($vars->EN == $name) return $boss_id;
 		
 		return 0;
 	}
 	
 	public function index()
 	{
-		/*
-		//Store the bosses.
+		/*//Store the bosses.
 		$rs = $this->db->get('bosses');
 		foreach($rs->result() as $res) $this->bosses[$res->id] = $res;
+		$rs->free_result();
 		
 		$add = array();
 		//Outer loop; Go through each log.
 		$rs = $this->db->get('logs');
+		$i = 1;
 		foreach($rs->result() as $log) {
 			$vars = json_decode($log->vars);
-			if(!is_object($vars) || !isset($vars->bosses) || empty($vars->bosses)) {
+			$skip = false;
+			if(!is_object($vars)) $vars = new stdClass;
+			if(!isset($vars->bosses) || empty($vars->bosses)) {
 				//Empty logs??
-				continue;
+				$skip = true;
 			}
 			
 			//Inner loop 1: Go through each boss.
-			foreach($vars->bosses as $boss_name => $attempts) {
+			if(!$skip) foreach($vars->bosses as $boss_name => &$attempts) {
 				//Ignore empty bosses.
 				if(empty($attempts)) continue;
 				
 				//Get the boss id and loop through each attempt.
 				$boss_id = $this->get_boss_id($boss_name);
-				foreach($attempts as $attempt) {
+				foreach($attempts as &$attempt) {
+					echo $i++."\n";
 					$add[] = array(
 						'id_log' => (int)$log->id,
 						'id_boss' => (int)$boss_id,
@@ -56,16 +59,15 @@ class Page extends MY_Controller
 			}
 			
 			//Finally correct the vars column.
-			if(!isset($vars->milestone)) continue;
+			if(!isset($vars->milestone)) $vars->milestone = array();
 			
-			$this->db->update('logs', array(
-				'vars' => json_encode($vars->milestone)
-			), array(
-				'id' => $log->id
-			));
+			//$this->db->update('logs', array(
+			//	'vars' => json_encode($vars->milestone)
+			//), array(
+			//	'id' => $log->id
+			//));
 		}
-		$this->db->insert_batch('attempts', $add);
-		*/
+		//$this->db->insert_batch('attempts', $add);*/
 		
 		//Render the page.
 		$this->view('home');

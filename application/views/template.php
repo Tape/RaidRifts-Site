@@ -19,8 +19,7 @@ var path='<?=base_url()?>';
 <body>
 <div id="header">
 <div id="header-wrap">
-<p class="logo"><a href="<?=base_url()?>">RaidRifts</a></p>
-<p class="catchphrase">Rift logs <span class="glow">made easy.</span></p>
+<p class="logo"><a href="<?=base_url()?>"><img src="<?=base_url()?>images/logo.png" alt="RaidRifts - Rift logs. Made easy."></a></p>
 <?php if($this->user->id): ?>
 <?php if($this->user->guild > 0 && $this->user->has_permission(ACCESS_LOG_UPLOAD)): ?>
     <a href="<?=base_url()?>downloads/client/rr_client.jar" id="client_download">

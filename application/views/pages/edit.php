@@ -8,7 +8,7 @@
 
 <div class="content-block">
 <h2 class="content-heading edit">Editing "<?=$page->name?>"</h2>
-<form method="post" action="<?base_url()?>page/edit/<?=$page->id?>/">
+<form method="post" action="<?=base_url()?>page/edit/<?=$page->id?>/">
 <textarea style="width:600px;height:500px;margin:auto" name="content"><?=$page->content?></textarea>
 <p class="right">
 	<a class="btn submit"><span>Save Changes</span></a>

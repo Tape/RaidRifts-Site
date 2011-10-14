@@ -29,18 +29,18 @@
 	Posts: <?=$post->posts?>
 </td>
 <td>
-<? if($post->id_user == $this->user->id): ?>
+<? if(false)://if($post->id_user == $this->user->id): ?>
 	<a href="<?=base_url()?>forums/<?=$i == 0 ? 'topic' : 'post'?>/<?=$post->id?>/edit/"><img src="<?=base_url()?>images/icons/create.gif" class="float-right" /></a>
 <? endif; ?>
 	<p class="board_title"><b class="glow">Title:</b> <?=empty($post->title) ? 're: '.$topic->title : $post->title?></p>
-	<?=$post->body?>
+	<?=nl2br($post->body)?>
 </td>
 </tr>
 </tbody>
 </table>
 <? endforeach; ?>
 <? else: ?>
-<p>Whoops! Looks like there's no threads here. :(</p>
+<p>Whoops! Looks like there's no topic here. :(</p>
 <? endif; ?>
 <div class="clear"></div>
 </div>

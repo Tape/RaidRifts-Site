@@ -6,6 +6,7 @@ class Forums extends CI_Controller
 	{
 		parent::__construct();
 		$this->load->model('forum_model');
+		$this->load->helper('forum');
 	}
 	
 	public function index()
@@ -46,6 +47,7 @@ class Forums extends CI_Controller
 		
 		//Test if the board exists.
 		$posts = $this->forum_model->get_posts($id);
+		if($posts === false) show_404('invalid_topic');
 		
 		//Prepare variables for the view.
 		$vars = array(
@@ -113,7 +115,7 @@ class Forums extends CI_Controller
 			$vars['post'] = $post;
 		} else {
 			//We created a new post, so redirect to it.
-			redirect('/forums/topic/'.$topic_id.'/#post'.$post_id);
+			redirect('/forums/topic/'.$topic->id.'/#post'.$post_id);
 		}
 		
 		//Create data to be injected into the template.

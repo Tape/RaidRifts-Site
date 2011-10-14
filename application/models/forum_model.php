@@ -79,11 +79,11 @@ class Forum_model extends CI_Model
 	
 	public function get_topics($id)
 	{
-		//Check if the board exists.
-		$this->db->order_by('date_inserted', 'desc')->where('id_board', $id);
-		$this->db->select('topics.id, topics.id_lastpost, topics.title, topics.post_count, topics.views, topics.date_inserted, topics.date_lastpost');
-		$this->db->select('users.username, users.admin');
-		$this->db->join('users', 'users.id = topics.id_user', 'inner');
+		$this->db->ar_orderby[] = 'IFNULL(`topics`.`date_lastpost`, `topics`.`date_inserted`) DESC';
+		$this->db->where('id_board', $id);
+		$this->db->select('topics.*, users1.username, users1.admin, users2.username AS lastpost_username, users2.admin AS lastpost_admin');
+		$this->db->join('users AS users1', 'users1.id = topics.id_user', 'inner');
+		$this->db->join('users AS users2', 'users2.id = topics.id_lastpost_user', 'left');
 		$rs = $this->db->get('topics');
 		if($rs->num_rows() < 1) return false;
 		
@@ -98,21 +98,21 @@ class Forum_model extends CI_Model
 	{
 		$data = array();
 		//Check if the topic exists.
-		$this->db->where('topics.id', $id)->join('boards', 'boards.id = topics.id_board', 'inner');
-		$this->db->join('users', 'users.id = topics.id_user', 'inner');
-		$topic_rs = $this->db->get('topics');
-		if($topic_rs->num_rows() < 1) return false;
+		$this->db->select('topics.*, users.username, users.admin, users.joined, users.posts, boards.name');
+		$this->db->join('boards', 'boards.id = topics.id_board', 'left');
+		$this->db->where('topics.id', $id)->join('users', 'users.id = topics.id_user', 'left');
+		$rs = $this->db->get('topics');
+		if($rs->num_rows() < 1) return false;
+		$data[] = $rs->row();
+		$rs->free_result();
 		
 		//Now loop through the posts.
-		$this->db->order_by('posts.date_inserted', 'desc')->where('id_topic', $id);
+		$this->db->order_by('posts.date_inserted', 'asc')->where('id_topic', $id);
 		$this->db->join('users', 'users.id = posts.id_user', 'inner');
 		$rs = $this->db->get('posts');
 		if($rs->num_rows() > 0) foreach($rs->result() as $row) $data[] = $row;
 		$rs->free_result();
 		
-		//We want to put the topic information at the end so we can pop it.
-		$data[] = $topic_rs->row();
-		$topic_rs->free_result();
 		return $data;
 	}
 	
@@ -130,7 +130,7 @@ class Forum_model extends CI_Model
 		
 		//Same for the body.
 		$len = strlen($data['body']);
-		if(!isset($data['body']) || $len == 0 || $len > 512000) {
+		if(!isset($data['body']) || $len == 0 || $len > 246000) {
 			$this->error = 'You must fill out the message field or the message you have provided is too long.';
 			return false;
 		}
@@ -162,6 +162,62 @@ class Forum_model extends CI_Model
 		), array('id' => $this->user->id));
 		
 		return $topic_id;
+	}
+	
+	public function create_post(&$data, &$topic)
+	{
+		//Loop through and clean up stuff.
+		foreach($data as &$var) $var = trim($var);
+		
+		//Check if the title meets criteria.
+		$len = strlen($data['title']);
+		if($len > 128) {
+			$this->error = 'The post name you have supplied is too long.';
+			return false;
+		}
+		
+		//Same for the body.
+		$len = strlen($data['body']);
+		if(!isset($data['body']) || $len == 0 || $len > 256000) {
+			$this->error = 'You must fill out the message field or the message you have provided is too long.';
+			return false;
+		}
+		
+		//Cleanup each element.
+		foreach($data as &$var) $var = htmlspecialchars($var, ENT_NOQUOTES);
+		
+		//Now we can submit the data to the database.
+		$timestamp = date('Y-m-d H:i:s');
+		$this->db->insert('posts', array(
+			'id_topic' => $topic->id,
+			'id_user' => $this->user->id,
+			'title' => $data['title'],
+			'body' => $data['body'],
+			'date_inserted' => $timestamp
+		));
+		$post_id = $this->db->insert_id();
+		
+		//Update the topic with information about the post.
+		$this->db->set('post_count', 'post_count + 1', false)->set('id_lastpost', $post_id, false)->update('topics', array(
+			'id_lastpost_user' => $this->user->id,
+			'date_lastpost' => $timestamp,
+			'id_lastpost' => $post_id
+		), array('id' => $topic->id));
+		
+		//We want to update the board with the most recent post too.
+		$this->db->set('count_posts', 'count_posts + 1', false)->set('id_lastpost', $post_id, false)->update('boards', array(
+			'id_lastpost_user' => $this->user->id,
+			'id_lasttopic' => $topic->id,
+			'date_lastpost' => $timestamp,
+			'id_lastpost' => $post_id
+		), array('id' => $topic->id_board));
+		
+		//Lastly increment the user's post count.
+		$this->db->set('posts', 'posts + 1', false)->update('users', array(
+			'id_lastpost' => $post_id
+		), array('id' => $this->user->id));
+		
+		return $post_id;
 	}
 	
 	public function get_error()
