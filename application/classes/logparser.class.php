@@ -16,12 +16,14 @@ class LogParser
 	private $wordlist = array();
 	private $byte_list = array();
 	
+	public $log_id;
+	
 	public $line = 0;
 	public $hours;//		Hours
 	public $minutes;//		Minutes
 	public $seconds;//		Seconds
 
-	public $type_id;//		The type id for the line (mostly unknown).
+	public $type_id;//		The type id for the line.
 
 	public $origin_type;//	Origin type (char)
 	public $origin_var1;//	Origin ?
@@ -75,8 +77,11 @@ class LogParser
 
 		//File successfully opened; Grab the milestone markers.
 		if($this->file_handle && !is_null($db)) {
-			$query = $db->get_where('logs', array('hash' => $log_id));
-			$this->byte_list = json_decode($query->row()->vars);
+			$rs = $db->get_where('logs', array('hash' => $log_id));
+			$row = $rs->row();
+			$rs->free_result();
+			$this->log_id = $row->id;
+			$this->byte_list = json_decode($row->vars);
 		}
 
 		//We need to establish the word list, which is stored in the first line.

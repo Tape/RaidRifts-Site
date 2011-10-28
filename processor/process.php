@@ -1,7 +1,5 @@
 <?php
 include('config.php');
-include('classes'.DS.'Encounter.php');
-include('classes'.DS.'Bosses.php');
 $filepath = $include_path.'combat_logs'.DS.$argv[1].".gz";
 
 //Connect to mysql.
@@ -12,6 +10,7 @@ mysql_select_db($mysql_db);
 $fh = gzopen($filepath, 'r');
 
 //Log and line stuff.
+$v = new stdClass;
 $v->line = 0;
 $v->byte_count = 0;
 $params = array();

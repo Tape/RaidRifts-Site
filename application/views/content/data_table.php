@@ -90,10 +90,10 @@ foreach(array('dmg', 'heal', 'taken') as $type) {
 ?>};
 </script>
 
-<h1 class="componentheading">Parse by <?=htmlentities($body_vars->guild_name)?> on <?=date('m/j/Y', strtotime($body_vars->raid_date))?></h1>
+<h1 class="componentheading">Parse by <?=htmlentities($body_vars->guild_name)?> on <?=date('m/j/Y', strtotime($body_vars->date))?></h1>
 
 <div class="content-block">
-<h2 class="content-heading chat"><?=$body_vars->encounter_boss?> - <?=$body_vars->l?> seconds</h2>
+<h2 class="content-heading chat">(<?=seconds_to_minutes($body_vars->l)?>) <?=$body_vars->encounter_boss?> - <?=$body_vars->l?>s</h2>
 
 <div id="tabs">
 <ul class="ui-helper-clearfix">

@@ -71,7 +71,7 @@ input:focus{outline-color:#fff}
 .content-block{margin-bottom:12px;background:#111;border:1px solid #292929;border-radius:11px;padding:11px;box-shadow:0px 0px 6px #000}
 .content-block.breadcrumbs{padding:5px 8px}
 .content-block.breadcrumbs p{padding:0}
-.content-block ul{padding:7px 0 7px 20px}
+.content-block ul,.content-block ol{padding:7px 0 7px 20px;bullet-color}
 .wrapper{background:#111;border:1px solid #222;border-width:0 1px;padding:0 11px}
 .content-block .tlc{background:url(../images/tlc.png) top left no-repeat;height:11px;margin:0 11px 0 0}
 .content-block .trc{background:url(../images/trc.png) top right no-repeat;height:11px;margin:-11px 0 0 11px}

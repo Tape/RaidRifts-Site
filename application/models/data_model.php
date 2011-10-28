@@ -33,7 +33,7 @@ class Data_model extends CI_Model
 	public function __construct()
 	{
 		parent::__construct();
-		$rs = $this->db->get('bosses');
+		$rs = $this->db->order_by('id', 'asc')->get('bosses');
 		foreach($rs->result() as $row) $this->boss_list[] = $row;
 		$rs->free_result();
 	}
@@ -61,6 +61,15 @@ class Data_model extends CI_Model
 		$data->maximum = array('dmg' => 0, 'heal' => 0, 'taken' => 0);
 		$data->markings = array();
 		
+		//Fetch encounter data from database.
+		$rs = $this->db->where('id_log', $parser->log_id)
+			->where('`start` <=', $lower)
+			->where('`end` >=', $upper)->get('attempts');
+		$row = $rs->row();
+		$rs->free_result();
+		$data->encounter_boss = $this->boss_list[$row->id_boss-1]->EN;
+		$data->wipe = $row->wipe;
+		
 		//Buffers for markings.
 		$raid_buffer = array();
 		$life_buffer = array();
@@ -79,14 +88,6 @@ class Data_model extends CI_Model
 			//Ignore NPCs but see if we have detected which one it is.
 			$is_npc = $parser->isNPC();
 			$is_pet = $parser->isPet();
-
-			//Set the encounter boss name.
-			if($is_npc && !isset($data->encounter_boss)) {
-				foreach($this->boss_list as &$boss) foreach(array('EN', 'FR', 'DE') as $lang) if($parser->origin_name == $boss->$lang) {
-					$data->encounter_boss = $parser->origin_name;
-					$data->wipe = true;
-				}
-			}
 
 			//Ignore energy/mana gains or abilities we want filtered out.
 			if($parser->type_id == 27 || in_array($parser->attack_id, $this->global_filter)) continue;
